@@ -1,5 +1,6 @@
 import datetime
 import os.path
+import pandas as pd
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -38,7 +39,8 @@ def main():
     service = build("calendar", "v3", credentials=creds)
 
     # Call the Calendar API
-    now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
+    #now = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
+    now = datetime.datetime(2023, 1, 1, 0, 0, 0).isoformat() + "Z"  # 'Z' indicates UTC time
     print("Getting the upcoming 10 events")
     events_result = (
         service.events()
@@ -46,7 +48,7 @@ def main():
             #calendarId="primary",
             calendarId="c_b1apq7apag81c7l18bh1kob8eo@group.calendar.google.com",
             timeMin=now,
-            maxResults=10,
+            maxResults=1000,
             singleEvents=True,
             orderBy="startTime",
         )
@@ -58,11 +60,20 @@ def main():
       print("No upcoming events found.")
       return
 
+
     # Prints the start and name of the next 10 events
+    #print(events[0].keys())
+    df = pd.DataFrame(events)
+    #print(df.head())
+    df.to_csv("calendar_events.csv", index=False)
+
+    
+    # dict_keys(['kind', 'etag', 'id', 'status', 'htmlLink', 'created', 'updated', 'summary', 'description', 'location', 'creator', 'organizer', 'start', 'end', 'iCalUID', 'sequence', 'attendees', 'extendedProperties', 'guestsCanInviteOthers', 'reminders', 'eventType'])
+
     for event in events:
       start = event["start"].get("dateTime", event["start"].get("date"))
       print(start, event["summary"])
-
+    
   except HttpError as error:
     print(f"An error occurred: {error}")
 
